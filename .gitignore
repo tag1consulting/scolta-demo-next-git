@@ -1,0 +1,8 @@
+node_modules/
+.next/
+public/pagefind/
+public/scolta/
+.scolta/
+coverage/
+*.tsbuildinfo
+.DS_Store

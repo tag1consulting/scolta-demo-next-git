@@ -1,0 +1,39 @@
+{
+  "name": "git-manual-next",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GitMastery (Next.js) — multilingual Git documentation demo for Scolta",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "postbuild": "npm run scolta:assets && npm run scolta:build",
+    "scolta:build": "tsx scripts/build-index.ts",
+    "scolta:assets": "scolta-build assets",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "js-yaml": "^4.2.0",
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "scolta": "file:../../packages/scolta-node",
+    "scolta-next": "file:../../packages/scolta-next"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.3.0",
+    "eslint": "^9.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^1.6.0"
+  }
+}
