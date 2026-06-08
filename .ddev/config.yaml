@@ -1,0 +1,39 @@
+name: gitmastery-next
+type: generic
+docroot: ""
+webserver_type: generic
+nodejs_version: "20"
+omit_containers: [db]
+corepack_enable: false
+use_dns_when_possible: true
+# The scolta-next + scolta packages are mounted from the monorepo at
+# /var/www/packages (see docker-compose.packages.yaml); the `file:../../packages/*`
+# deps in package.json resolve there. node_modules is a container-only named
+# volume (docker-compose.nodemodules.yaml) so the host's macOS install never
+# leaks into the Linux container — the Node equivalent of the Django venv trap.
+web_environment:
+  - NODE_ENV=development
+# First-start build: install the demo, copy the runtime assets into public/scolta,
+# and build the Pagefind index from the content source (content mode). Mirrors
+# the Drupal demo's `drush scolta:build` / Django's `manage.py scolta_build`.
+hooks:
+  post-start:
+    - exec: |
+        set -e
+        cd /var/www/html
+        # The node_modules named volume mounts root-owned; hand it to the web user.
+        sudo chown -R "$(id -u):$(id -g)" /var/www/html/node_modules
+        npm install --legacy-peer-deps --no-audit --no-fund
+        npm run scolta:assets
+        npm run scolta:build
+# Next.js dev server (App Router incl. the AI Route Handlers), mapped to the
+# project URL by the router. Same shape as the Django demo's runserver daemon.
+web_extra_daemons:
+  - name: "next"
+    command: "bash -lc 'cd /var/www/html; until [ -x node_modules/.bin/next ]; do sleep 2; done; exec node_modules/.bin/next dev -H 0.0.0.0 -p 3000'"
+    directory: /var/www/html
+web_extra_exposed_ports:
+  - name: "next"
+    container_port: 3000
+    http_port: 80
+    https_port: 443
