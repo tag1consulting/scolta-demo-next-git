@@ -8,10 +8,19 @@ export function generateStaticParams() {
 export default function DocPage({ params }: { params: { slug: string[] } }) {
   const page = pageBySlugSegments(params.slug);
   if (!page) notFound();
+
+  const isDoc = page.type !== "about";
+
   return (
-    <article lang={page.language}>
+    <article className={`prose ${page.type}`} lang={page.language}>
       <h1>{page.title}</h1>
-      {page.section ? <p><em>{page.section} · {page.difficulty}</em></p> : null}
+      {isDoc && (page.section || page.difficulty || page.gitVersion) ? (
+        <div className="doc-meta">
+          {page.section ? <span className="badge badge--section">{page.section}</span> : null}
+          {page.difficulty ? <span className="badge badge--difficulty">{page.difficulty}</span> : null}
+          {page.gitVersion ? <span className="badge badge--version">Git {page.gitVersion}</span> : null}
+        </div>
+      ) : null}
       <div dangerouslySetInnerHTML={{ __html: page.body }} />
     </article>
   );

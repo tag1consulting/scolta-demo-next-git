@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 import { ContentItem } from "scolta";
-import { createScoltaRouteHandlers } from "scolta-next";
+import { createScoltaRouteHandlers, NextScoltaConfig } from "scolta-next";
 import { GitMasterySource, toContentItem } from "../lib/source.js";
 import { aboutPage, loadEnglishDocs } from "../lib/content.js";
 import { getConfig, scoltaConfigInit } from "../lib/config.js";
@@ -54,17 +54,23 @@ describe("config round-trip", () => {
 });
 
 describe("AI route wiring", () => {
-  it("expand-query degrades gracefully with no API key", async () => {
-    // The demo config has no API key; expansion must degrade to the original
+  it("expand-query degrades gracefully when AI is unconfigured", async () => {
+    // With an explicit provider and no key (the Amazee auto-provisioning default
+    // is bypassed here for determinism), expansion must degrade to the original
     // query (HTTP 200), never error — proving the route is correctly wired.
-    const h = createScoltaRouteHandlers(getConfig(), { logger: { error() {} } });
+    const noAiConfig = NextScoltaConfig.fromObject({
+      ...scoltaConfigInit,
+      ai_provider: "anthropic",
+      ai_api_key: "",
+    });
+    const h = createScoltaRouteHandlers(noAiConfig, { logger: { error() {} } });
     const res = await h.expandQuery(
       new Request("http://x/api/scolta/v1/expand-query", { method: "POST", body: JSON.stringify({ query: "rebase" }) }),
     );
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.ok).toBe(true);
-    expect(json.data.terms).toEqual(["rebase"]);
+    // The route sends the raw payload (no {ok,data} envelope), matching scolta.js.
+    expect(json.terms).toEqual(["rebase"]);
   });
 
   it("health reflects saved scoring", async () => {

@@ -1,19 +1,45 @@
 import type { ReactNode } from "react";
-import { getConfig } from "../lib/config";
-import Search from "../components/Search";
+import "./globals.css";
+import { sectionNav, translatableSlugs } from "../lib/content";
+import LanguageSwitcher from "./_components/LanguageSwitcher";
+import SidebarNav from "./_components/SidebarNav";
 
-export const metadata = { title: "GitMastery", description: "Git documentation reference" };
+export const metadata = {
+  title: "GitMastery",
+  description: "GitMastery — multilingual Git documentation with Scolta AI search.",
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const browserConfig = getConfig().toBrowserConfig();
+  const sections = sectionNav();
+  const translatable = translatableSlugs();
   return (
     <html lang="en">
       <body>
-        <header style={{ padding: "1rem", borderBottom: "1px solid #ddd" }}>
-          <a href="/"><strong>GitMastery</strong></a>
-          <Search config={browserConfig} />
+        <a className="skip-link" href="#main">Skip to main content</a>
+
+        <header className="site-header">
+          <div className="site-header__inner">
+            <a className="site-brand" href="/">
+              <span className="site-brand__mark">⎇</span>
+              <span className="site-brand__name">GitMastery</span>
+            </a>
+            <LanguageSwitcher translatable={translatable} />
+          </div>
         </header>
-        <main style={{ maxWidth: 820, margin: "0 auto", padding: "1rem" }}>{children}</main>
+
+        <div className="layout">
+          <SidebarNav sections={sections} />
+          <main id="main" className="content">
+            {children}
+          </main>
+        </div>
+
+        <footer className="site-footer">
+          <p>
+            GitMastery is a fictional demo by <a href="https://tag1.com">Tag1 Consulting</a>,
+            showcasing <a href="https://tag1.com/scolta">Scolta</a> AI search on Next.js.
+          </p>
+        </footer>
       </body>
     </html>
   );

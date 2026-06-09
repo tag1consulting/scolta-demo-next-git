@@ -232,3 +232,36 @@ export function pageBySlugSegments(segments: string[]): GitMasteryPage | undefin
 export function allSlugParams(): { slug: string[] }[] {
   return allPages().map((p) => ({ slug: p.url.replace(/^\/|\/$/g, "").split("/") }));
 }
+
+export interface NavLink {
+  title: string;
+  url: string;
+}
+export interface NavSection {
+  section: string;
+  pages: NavLink[];
+}
+
+/**
+ * Group the English docs by section in first-seen order (the sidebar nav and the
+ * home-page section grid both render from this — parity with Django's
+ * `section_nav` template tag).
+ */
+export function sectionNav(): NavSection[] {
+  const order: string[] = [];
+  const bySection = new Map<string, NavLink[]>();
+  for (const d of loadEnglishDocs()) {
+    if (!d.section) continue;
+    if (!bySection.has(d.section)) {
+      bySection.set(d.section, []);
+      order.push(d.section);
+    }
+    bySection.get(d.section)!.push({ title: d.title, url: d.url });
+  }
+  return order.map((section) => ({ section, pages: bySection.get(section)! }));
+}
+
+/** The set of EN doc slugs (used to decide which pages have translations). */
+export function translatableSlugs(): string[] {
+  return loadEnglishDocs().map((d) => d.slug);
+}
