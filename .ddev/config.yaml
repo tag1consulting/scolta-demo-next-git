@@ -11,11 +11,16 @@ use_dns_when_possible: true
 # deps in package.json resolve there. node_modules is a container-only named
 # volume (docker-compose.nodemodules.yaml) so the host's macOS install never
 # leaks into the Linux container — the Node equivalent of the Django venv trap.
-web_environment:
-  - NODE_ENV=development
-# First-start build: install the demo, copy the runtime assets into public/scolta,
-# and build the Pagefind index from the content source (content mode). Mirrors
-# the Drupal demo's `drush scolta:build` / Django's `manage.py scolta_build`.
+# NODE_ENV is intentionally NOT pinned to development: `next build`/`next start`
+# default to production on their own, and forcing development makes `next build`
+# mix the dev and prod React server runtimes (client-component prerender then dies
+# with "Cannot read properties of null (reading 'useContext')"). Leaving it unset
+# also keeps `npm install` installing devDependencies (tsx, typescript) the build
+# needs.
+# First-start: install the demo, then build a real production bundle. `npm run
+# build` runs `next build` and its `postbuild` (scolta:assets → public/scolta,
+# scolta:build → the Pagefind index in public/pagefind), so the served build is a
+# consistent production deploy. Mirrors the Drupal/Django demos' build step.
 hooks:
   post-start:
     - exec: |
@@ -23,14 +28,21 @@ hooks:
         cd /var/www/html
         # The node_modules named volume mounts root-owned; hand it to the web user.
         sudo chown -R "$(id -u):$(id -g)" /var/www/html/node_modules
+        # Clear the readiness sentinel + previous build FIRST, so the daemon
+        # blocks until THIS build (incl. postbuild assets + Pagefind index) fully
+        # completes instead of starting against a stale or half-written .next.
+        rm -f .build-ready
+        rm -rf .next
         npm install --legacy-peer-deps --no-audit --no-fund
-        npm run scolta:assets
-        npm run scolta:build
-# Next.js dev server (App Router incl. the AI Route Handlers), mapped to the
-# project URL by the router. Same shape as the Django demo's runserver daemon.
+        npm run build
+        # Touch the sentinel only after a complete, successful build (set -e).
+        touch .build-ready
+# Next.js production server (App Router incl. the AI Route Handlers), serving the
+# build produced above. Waits for the post-start readiness sentinel AND the build
+# artifact before starting. Same shape as the Django demo's runserver daemon.
 web_extra_daemons:
   - name: "next"
-    command: "bash -lc 'cd /var/www/html; until [ -x node_modules/.bin/next ]; do sleep 2; done; exec node_modules/.bin/next dev -H 0.0.0.0 -p 3000'"
+    command: "bash -lc 'cd /var/www/html; while [ ! -f .build-ready ] || [ ! -f .next/BUILD_ID ] || [ ! -x node_modules/.bin/next ]; do sleep 2; done; exec node_modules/.bin/next start -H 0.0.0.0 -p 3000'"
     directory: /var/www/html
 web_extra_exposed_ports:
   - name: "next"

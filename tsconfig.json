@@ -31,7 +31,6 @@
   "include": [
     "lib",
     "tests",
-    "components",
     ".next/types/**/*.ts"
   ],
   "exclude": [

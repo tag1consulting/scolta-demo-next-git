@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import "./globals.css";
+import { getConfig } from "../lib/config";
 import { sectionNav, translatableSlugs } from "../lib/content";
 import LanguageSwitcher from "./_components/LanguageSwitcher";
 import SidebarNav from "./_components/SidebarNav";
+import Search from "./_components/Search";
 
 export const metadata = {
   title: "GitMastery",
@@ -12,6 +14,9 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   const sections = sectionNav();
   const translatable = translatableSlugs();
+  // SAVED browser config resolved server-side; the client Search component
+  // injects the per-page currentLanguage before handing it to the widget.
+  const browserConfig = getConfig().toBrowserConfig();
   return (
     <html lang="en">
       <body>
@@ -23,6 +28,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <span className="site-brand__mark">⎇</span>
               <span className="site-brand__name">GitMastery</span>
             </a>
+            <div className="site-search">
+              <Search config={browserConfig} />
+            </div>
             <LanguageSwitcher translatable={translatable} />
           </div>
         </header>

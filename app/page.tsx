@@ -1,9 +1,6 @@
-import { getConfig } from "../lib/config";
 import { loadEnglishDocs, sectionNav } from "../lib/content";
-import Search from "../components/Search";
 
 export default function Home() {
-  const browserConfig = getConfig().toBrowserConfig();
   const docs = loadEnglishDocs();
   const sections = sectionNav();
 
@@ -17,10 +14,6 @@ export default function Home() {
           <em>slow git</em>.
         </p>
       </article>
-
-      <div className="home-search">
-        <Search config={browserConfig} />
-      </div>
 
       <div className="section-grid">
         {sections.map((s) => (
