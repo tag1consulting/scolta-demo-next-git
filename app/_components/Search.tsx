@@ -13,6 +13,7 @@
 import { useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { ScoltaSearch } from "scolta-next/component";
+import { scoltaEndpoints } from "../../lib/endpoints";
 
 const TRANSLATION_LANGS = new Set(["es", "fr", "it", "de"]);
 
@@ -31,9 +32,13 @@ export default function Search({ config }: SearchProps) {
   const pathname = usePathname() ?? "/";
   const locale = localeFromPath(pathname);
 
-  // Inject the per-page language as the authoritative signal for the widget.
+  // Inject the per-page language as the authoritative signal for the widget,
+  // and the AI endpoints this app actually serves. Without the latter the widget
+  // posts to scolta.js's bare defaults, `trailingSlash: true` answers each with a
+  // 308 to the slash-suffixed form, and every AI operation costs two round trips
+  // and looks like two calls.
   const localizedConfig = useMemo(
-    () => ({ ...config, currentLanguage: locale }),
+    () => ({ ...config, currentLanguage: locale, endpoints: scoltaEndpoints() }),
     [config, locale],
   );
 
