@@ -5,8 +5,9 @@ export function generateStaticParams() {
   return allSlugParams();
 }
 
-export default function DocPage({ params }: { params: { slug: string[] } }) {
-  const page = pageBySlugSegments(params.slug);
+export default async function DocPage({ params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug } = await params;
+  const page = pageBySlugSegments(slug);
   if (!page) notFound();
 
   const isDoc = page.type !== "about";
