@@ -73,8 +73,16 @@ describe("AI route wiring", () => {
     expect(json.terms).toEqual(["rebase"]);
   });
 
-  it("health reflects saved scoring", async () => {
+  it("health is status-only by default (no config disclosure)", async () => {
     const h = createScoltaRouteHandlers(getConfig(), { logger: { error() {} } });
+    const json = await (await h.health(new Request("http://x/api/scolta/v1/health"))).json();
+    expect(json.status).toBeTruthy();
+    expect(json.scoring).toBeUndefined();
+  });
+
+  it("health reflects saved scoring when healthDetail is on", async () => {
+    const detailed = NextScoltaConfig.fromObject({ ...scoltaConfigInit, healthDetail: true });
+    const h = createScoltaRouteHandlers(detailed, { logger: { error() {} } });
     const json = await (await h.health(new Request("http://x/api/scolta/v1/health"))).json();
     expect(json.scoring.RESULTS_PER_PAGE).toBe(12);
   });
