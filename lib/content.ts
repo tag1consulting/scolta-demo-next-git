@@ -14,7 +14,9 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import yaml from "js-yaml";
+// js-yaml 5 is ESM-only and exports no default binding, so it is imported as a
+// namespace (matching the node: imports above). Works on 4.x too.
+import * as yaml from "js-yaml";
 
 const CONTENT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "content");
 export const LANGS = ["es", "fr", "it", "de"] as const;
